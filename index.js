@@ -2,12 +2,12 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const app = express();
-
+const dns = require("dns");
+const urlparser = require("url");
 const { MongoClient } = require("mongodb");
-
-app.use(express.urlencoded({ extended: false }));
+//add middleware to parse the body of the request
+app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
 
 const uri = process.env.MONGO_URI;
 const client = new MongoClient(uri, {
@@ -15,9 +15,8 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
 });
 
-const db=client.db("urlshortner");
-const collection = db.collection("urls");
-
+const db = client.db("urlshortner");
+const urls = db.collection("urls");
 
 //test mongodb connection
 async function connectToMongoDB() {
@@ -48,13 +47,31 @@ app.get("/api/hello", function (req, res) {
   res.json({ greeting: "hello API" });
 });
 
+
+app.post("/api/shorturl", function (req, res) {
+  const url = req.body.url;
+  const dnslook = dns.lookup(
+    urlparser.parse(url).hostname,
+    async (err, address) => {
+      if (!address) {
+        res.json({ error: "invalid url" });
+      } else {
+        const urlCount = await urls.countDocuments();
+        urlDoc = {
+          url: url,
+          short_url: urlCount,
+        };
+        const result = await urls.insertOne(urlDoc);
+        console.log(result);
+        res.json({ original_url: urlDoc.url, short_url: urlCount });
+      }
+    }
+  );
+  
+});
+
 app.listen(port, function () {
   console.log(`Listening on port ${port}`);
 });
 
 
-app.post("/api/shorturl", function (req, res) {
-
-  
-  res.json({ greeting: "hello API" });
-});
