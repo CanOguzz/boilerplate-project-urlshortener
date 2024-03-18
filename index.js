@@ -14,6 +14,11 @@ const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
+
+const db=client.db("urlshortner");
+const collection = db.collection("urls");
+
+
 //test mongodb connection
 async function connectToMongoDB() {
   try {
