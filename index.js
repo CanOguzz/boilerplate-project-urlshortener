@@ -71,8 +71,11 @@ app.post("/api/shorturl", function (req, res) {
 });
 
 
-app.get("/api/shorturl/:short_url", function (req, res) {
-  res.json({ greeting: "hello API" });
+app.get("/api/short_url/:short_url", async function (req, res) {
+  const shorturl=req.params.short_url;
+  const urlDoc =  await urls.findOne({short_url: +shorturl});
+  res.redirect(urlDoc.url);
+  console.log("you have been redirected to the original url");
 });
 
 app.listen(port, function () {
